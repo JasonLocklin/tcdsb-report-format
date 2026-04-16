@@ -1,37 +1,113 @@
+// typst-show.typ
+//
+// This file is processed AFTER Quarto injects brand-color from _brand.yml,
+// so brand-color.*, brand-logo.*, and brand.typography.* are available here.
+//
+// Defines document helper functions (tcdsb-title-page, tcdsb-contents-page)
+// and wires brand values into the tcdsb() template function.
 
-// Typst custom formats typically consist of a 'typst-template.typ' (which is
-// the source code for a typst template) and a 'typst-show.typ' which calls the
-// template's function (forwarding Pandoc metadata values as required)
-//
-// This is an example 'typst-show.typ' file (based on the default template  
-// that ships with Quarto). It calls the typst function named 'article' which 
-// is defined in the 'typst-template.typ' file. 
-//
-// If you are creating or packaging a custom typst template you will likely
-// want to replace this file and 'typst-template.typ' entirely. You can find
-// documentation on creating typst templates here and some examples here:
-//   - https://typst.app/docs/tutorial/making-a-template/
-//   - https://github.com/typst/templates
-#show: doc => article(
-$if(title)$
-  title: [$title$],
-$endif$
-$if(subtitle)$
-  subtitle: [$subtitle$],
-$endif$
-$if(by-author)$
-  authors: (
-$for(by-author)$
-$if(it.name.literal)$
-    ( name: [$it.name.literal$],
-      affiliation: [$for(it.affiliations)$$it.name$$sep$, $endfor$],
-      email: [$it.email$] ),
-$endif$
-$endfor$
+
+// --- Title page -----------------------------------------------------
+
+#let tcdsb-title-page() = {
+  page(
+    margin: 0in,
+    background: image(
+      "title_page_background.png",
+      height: 35%,
+      fit: "cover",
     ),
+    header: none,
+    footer: none,
+  )[
+    // TCDSB logo (brand-logo.large) top-right
+    #place(right, dy: 60pt, dx: -60pt)[
+      #box(height: 150pt, image(brand-logo.large.path, height: 95%))
+    ]
+
+    #place(left + horizon, dy: -2in, dx: 1.25in)[
+      #text(weight: "light", size: 30pt, fill: brand-color.primary, _tcdsb-title)
+    ]
+
+    #place(left + horizon, dy: -1.5in, dx: 1.25in)[
+      #text(weight: "light", size: 26pt, fill: brand-color.primary, _tcdsb-subtitle)
+    ]
+
+    #place(left + horizon, dy: -1in, dx: 1.25in)[
+      #text(weight: "light", size: 24pt, fill: brand-color.primary, _tcdsb-dept)
+    ]
+
+    #place(left + horizon, dy: 1in, dx: 1.25in)[
+      #text(weight: "light", size: 24pt, fill: brand-color.primary, _tcdsb-date)
+    ]
+
+    #place(left + horizon, dy: 1.75in, dx: 1.25in)[
+      #text(weight: "light", size: 20pt, fill: brand-color.blue_light, _tcdsb-author)
+    ]
+
+    // R&A logo (brand-logo.small) centred at page bottom
+    #place(center + bottom, dy: -36pt)[
+      #block(height: 150pt)[
+        #box(inset: (x: 12pt), line(length: 100%, angle: 90deg, stroke: 0.5pt + white))
+        #box(image(brand-logo.small.path, width: 50%))
+      ]
+    ]
+  ]
+}
+
+
+// --- Contents page --------------------------------------------------
+
+#let tcdsb-contents-page() = {
+  page(header: none, footer: none)[
+    #outline(indent: 1.5em)
+  ]
+}
+
+
+// --- Display mechanics ----------------------------------------------
+
+// Figures: allow page breaking across pages
+#show figure: set block(breakable: true)
+
+// Tables: allow multi-page tables
+#show table: set block(breakable: true)
+
+// Lists: consistent spacing below
+#show list: set block(below: 0.75em)
+
+// Block quotes: breathing room above and below
+#show quote: set block(above: 0.75em, below: 0.75em)
+
+
+// --- Apply document template ----------------------------------------
+// Font is sourced from _brand.yml via brand.typography.base.family.
+// mainfont (document frontmatter) takes precedence if set.
+// If neither is set the build panics — we never silently fall back
+// to a non-brand font.
+
+$if(mainfont)$
+#let _tcdsb-font = ("$mainfont$",)
+$elseif(brand.typography.base.family)$
+#let _tcdsb-font = $brand.typography.base.family$
+$else$
+#let _ = panic(
+  "tcdsb PDF format: no brand font found. " +
+  "Set typography.base.family in _brand.yml."
+)
+#let _tcdsb-font = ()
 $endif$
-$if(date)$
-  date: [$date$],
+
+#show: doc => tcdsb(
+  font: _tcdsb-font,
+$if(fontsize)$
+  fontsize: $fontsize$,
+$endif$
+$if(papersize)$
+  paper: "$papersize$",
+$endif$
+$if(margin)$
+  margin: ($for(margin/pairs)$$margin.key$: $margin.value$,$endfor$),
 $endif$
 $if(lang)$
   lang: "$lang$",
@@ -39,59 +115,9 @@ $endif$
 $if(region)$
   region: "$region$",
 $endif$
-$if(abstract)$
-  abstract: [$abstract$],
-  abstract-title: "$labels.abstract$",
-$endif$
-$if(margin)$
-  margin: ($for(margin/pairs)$$margin.key$: $margin.value$,$endfor$),
-$endif$
-$if(papersize)$
-  paper: "$papersize$",
-$endif$
-$if(mainfont)$
-  font: ("$mainfont$",),
-$elseif(brand.typography.base.family)$
-  font: ("$brand.typography.base.family$",),
-$endif$
-$if(fontsize)$
-  fontsize: $fontsize$,
-$elseif(brand.typography.base.size)$
-  fontsize: $brand.typography.base.size$,
-$endif$
-$if(title)$
-$if(brand.typography.headings.family)$
-  heading-family: ("$brand.typography.headings.family$",),
-$endif$
-$if(brand.typography.headings.weight)$
-  heading-weight: $brand.typography.headings.weight$,
-$endif$
-$if(brand.typography.headings.style)$
-  heading-style: "$brand.typography.headings.style$",
-$endif$
-$if(brand.typography.headings.decoration)$
-  heading-decoration: "$brand.typography.headings.decoration$",
-$endif$
-$if(brand.typography.headings.color)$
-  heading-color: $brand.typography.headings.color$,
-$endif$
-$if(brand.typography.headings.line-height)$
-  heading-line-height: $brand.typography.headings.line-height$,
-$endif$
-$endif$
-$if(section-numbering)$
-  sectionnumbering: "$section-numbering$",
-$endif$
-$if(toc)$
-  toc: $toc$,
-$endif$
-$if(toc-title)$
-  toc_title: [$toc-title$],
-$endif$
-$if(toc-indent)$
-  toc_indent: $toc-indent$,
-$endif$
-  toc_depth: $toc-depth$,
-  cols: $if(columns)$$columns$$else$1$endif$,
+  color-primary: brand-color.primary,
+  color-secondary: brand-color.purple_deep,
+  color-accent: brand-color.maroon_medium,
+  color-link: brand-color.blue_bright,
   doc,
 )
