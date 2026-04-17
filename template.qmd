@@ -1,7 +1,7 @@
 ---
 title: Untitled
 format:
-  tcdsb-report-format-typst: default
+  report-typst: default
 ---
 
 ## Introduction
