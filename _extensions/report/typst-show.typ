@@ -12,8 +12,15 @@
 #let tcdsb-title-page() = {
   page(
     margin: 0in,
+    // Quarto bug: paths in Typst template partials are not resolved relative to
+    // the partial's location — they are emitted verbatim into the generated .typ
+    // and resolved relative to the project root at compile time. The image must
+    // therefore be referenced by its project-root path, not a bare filename.
+    // Track: https://github.com/quarto-dev/quarto-cli/issues (path resolution
+    // in typst template partials). When fixed, this can revert to
+    // "title_page_background.png".
     background: image(
-      "title_page_background.png",
+      "_extensions/report/title_page_background.png",
       height: 35%,
       fit: "cover",
     ),
