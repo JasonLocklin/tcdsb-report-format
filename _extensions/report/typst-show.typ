@@ -20,7 +20,7 @@
     // in typst template partials). When fixed, this can revert to
     // "title_page_background.png".
     background: image(
-      "_extensions/report/title_page_background.png",
+      "title_page_background.png",
       height: 35%,
       fit: "cover",
     ),
